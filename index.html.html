@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Attrape-le Caca 💩</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #e0ffe0;
+      overflow: hidden;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      padding: 10px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #aaa;
+      font-size: 1.2rem;
+      z-index: 10;
+    }
+
+    #pauseBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 10px 20px;
+      background: #ffdd57;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 0 10px #aaa;
+      z-index: 10;
+    }
+
+    .caca {
+      position: absolute;
+      font-size: 3rem;
+      cursor: pointer;
+      animation: fall 4s linear forwards;
+    }
+
+    @keyframes fall {
+      from { top: -50px; }
+      to { top: 100vh; }
+    }
+
+    #pauseMenu {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px #666;
+      display: none;
+      z-index: 20;
+      text-align: center;
+    }
+
+    #pauseMenu button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    #winMessage {
+      display:none;
+      position:fixed;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      background:#dfffd4;
+      padding:40px 60px;
+      border-radius:20px;
+      box-shadow:0 0 20px #666;
+      z-index:100;
+      font-size:2rem;
+      text-align:center;
+    }
+
+    audio {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score : 0</div>
+  <button id="pauseBtn">⏸ Pause</button>
+  <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.5" title="Volume">
+
+  <div id="pauseMenu">
+    <h2>⏸ Jeu en pause</h2>
+    <button id="resumeBtn">▶ Reprendre</button>
+    <button onclick="window.location.href='index.html'">🏠 Quitter</button>
+  </div>
+
+  <div id="winMessage">
+    🎉 Félicitations, tu as gagné ! 🎉<br>
+    Tu as ramassé 300 cacas !
+    <br><br>
+    <button onclick="window.location.reload()">Rejouer</button>
+  </div>
+
+  <audio id="music" autoplay loop>
+    <source src="251461__joshuaempyre__arcade-music-loop.wav" type="audio/mpeg" />
+    Ton navigateur ne supporte pas l'audio.
+  </audio>
+
+ <script>
+    let score = 0;
+    let interval;
+    let intervalTime = 800;
+    let isPaused = false;
+
+    const scoreEl = document.getElementById("score");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const pauseMenu = document.getElementById("pauseMenu");
+    const music = document.getElementById("music");
+    const volumeControl = document.getElementById("volumeControl");
+    const winMessage = document.getElementById("winMessage");
+    music.volume = 0.5;
+
+    volumeControl.addEventListener("input", () => {
+      music.volume = volumeControl.value;
+    });
+
+    window.addEventListener("click", () => {
+      music.play().catch(() => {});
+    }, { once: true });
+
+    function createCaca() {
+      if (isPaused) return;
+
+      const caca = document.createElement("div");
+      caca.classList.add("caca");
+      caca.textContent = "💩";
+      caca.style.left = Math.random() * 90 + "vw";
+
+      caca.addEventListener("click", () => {
+        score++;
+        scoreEl.textContent = "Score : " + score;
+        caca.remove();
+        checkProgress();
+      });
+
+      caca.addEventListener("animationend", () => {
+        caca.remove();
+      });
+
+      document.body.appendChild(caca);
+    }
+
+    function startInterval() {
+      clearInterval(interval);
+      interval = setInterval(createCaca, intervalTime);
+    }
+
+    function checkProgress() {
+      // Accélère tous les 40 cacas ramassés, jusqu'à 30
+      if (score % 40 === 0 && score < 300) {
+        intervalTime = Math.max(200, intervalTime - 100); // vitesse min 200ms
+        startInterval();
+      }
+      // Victoire à 500
+      if (score >= 300) {
+        clearInterval(interval);
+        winMessage.style.display = "block";
+        music.pause();
+      }
+    }
+
+    startInterval();
+
+    pauseBtn.addEventListener("click", () => {
+      isPaused = true;
+      pauseMenu.style.display = "block";
+      music.pause();
+    });
+
+    document.getElementById("resumeBtn").addEventListener("click", () => {
+      isPaused = false;
+      pauseMenu.style.display = "none";
+      music.play();
+    });
+  </script>
+</body>
+</html>
